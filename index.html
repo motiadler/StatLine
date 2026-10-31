@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>מעקב מהלכים</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Secular+One&family=Assistant:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F3F5F8; --surface:#FFFFFF; --ink:#14213D; --muted:#5B6578;
+  --line:#D8DEE8; --orange:#F2711C; --orange-ink:#FFFFFF; --navy:#14213D; --navy-ink:#FFFFFF;
+  --press:#FFE4D1; --danger:#C53030;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1626; --surface:#18233A; --ink:#EEF2F8; --muted:#9AA6BC;
+    --line:#2B3956; --navy:#24345A; --press:#4A2A14; --danger:#FF8A80; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1626; --surface:#18233A; --ink:#EEF2F8; --muted:#9AA6BC;
+  --line:#2B3956; --navy:#24345A; --press:#4A2A14; --danger:#FF8A80; color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+[hidden]{display:none !important}
+.field input[hidden],.field select[hidden]{display:none}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+html,body{margin:0;height:100%}
+html{overflow-x:hidden}
+body{background:var(--bg);color:var(--ink);font-family:"Assistant",Arial,sans-serif;font-size:17px;line-height:1.45;-webkit-tap-highlight-color:transparent;overflow-x:hidden;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+.screen > *{min-width:0;max-width:100%}
+.screen{display:none;width:100%;max-width:560px;margin:0 auto;padding:20px 16px 28px;min-height:100%;flex-direction:column}
+.screen.active{display:flex}
+h1,h2,.display{font-family:"Secular One","Assistant",Arial,sans-serif;font-weight:400;margin:0}
+h1{font-size:2rem;line-height:1.15}
+h2{font-size:1.4rem}
+.sub{color:var(--muted);margin:4px 0 22px}
+
+/* setup */
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+.field label{font-weight:700;font-size:.95rem}
+.field input{font:inherit;font-size:1.1rem;padding:14px;border:2px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);width:100%;min-width:0;max-width:100%}
+.field input:not([hidden]){display:block}
+.field input[type="date"]{-webkit-appearance:none;appearance:none;min-height:3.3rem;text-align:right}
+.field input[type="date"]::-webkit-date-and-time-value{text-align:right}
+.field input:focus,.field select:focus{outline:none;border-color:var(--orange)}
+.field select{font:inherit;font-size:1.1rem;padding:14px 14px 14px 40px;border:2px solid var(--line);border-radius:12px;color:var(--ink);width:100%;min-width:0;max-width:100%;display:block;-webkit-appearance:none;appearance:none;
+  background:var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'%3E%3Cpath d='M1 1l6 6 6-6' fill='none' stroke='%238892A6' stroke-width='2'/%3E%3C/svg%3E") no-repeat left 14px center}
+.field .other{margin-top:8px}
+.linkbtn{font:inherit;font-size:.9rem;font-weight:600;color:var(--orange);background:none;border:none;padding:8px 0 0;cursor:pointer;align-self:flex-start}
+.sheet textarea{font:inherit;font-size:1rem;width:100%;padding:12px;border:2px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink);resize:vertical;min-height:10rem}
+.sheet textarea:focus{outline:none;border-color:var(--orange)}
+.sheet{max-height:90vh;overflow-y:auto}
+.ocr-status{font-size:.9rem;color:var(--muted);margin:0 0 10px}
+.btn{font:inherit;font-weight:700;font-size:1.15rem;border:none;border-radius:14px;padding:16px;cursor:pointer;width:100%}
+.btn-primary{background:var(--orange);color:var(--orange-ink)}
+.btn-dark{background:var(--navy);color:var(--navy-ink)}
+.btn-ghost{background:transparent;color:var(--ink);border:2px solid var(--line)}
+.btn:focus-visible,.stat:focus-visible{outline:3px solid var(--orange);outline-offset:2px}
+.btn:disabled{opacity:.4;cursor:default}
+.resume{margin-top:12px}
+.spacer{flex:1}
+
+/* tracker */
+.board{background:var(--navy);color:var(--navy-ink);border-radius:18px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.board > div:first-child{min-width:0;overflow-wrap:anywhere}
+.board .who{font-weight:700;font-size:1rem;line-height:1.25}
+.board .vs{opacity:.75;font-size:.9rem}
+.pts{text-align:center}
+.pts .num{font-family:"Secular One",sans-serif;font-size:3.2rem;line-height:1;color:var(--orange)}
+.pts .lbl{font-size:.8rem;opacity:.8}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.stat{position:relative;min-width:0;gap:6px;font:inherit;background:var(--surface);color:var(--ink);border:2px solid var(--line);border-radius:16px;min-height:98px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;touch-action:manipulation;transition:transform .08s,background-color .2s}
+.stat:active{transform:scale(.97)}
+.stat.flash{background:var(--press)}
+.stat .name{font-family:"Secular One",sans-serif;font-size:clamp(1.05rem,5vw,1.5rem);line-height:1.15;text-align:right;min-width:0}
+.stat .val{font-family:"Secular One",sans-serif;font-size:clamp(1.8rem,8vw,2.4rem);line-height:1}
+.stat .hint{position:absolute;bottom:8px;right:14px;font-size:.78rem;color:var(--muted)}
+.stat.wide{grid-column:1 / -1}
+.stat.score .name{color:var(--orange)}
+.stat.miss{border-style:dashed}
+.stat.miss .name{font-size:clamp(.95rem,4.2vw,1.25rem);color:var(--muted)}
+.stat.miss .val{color:var(--muted)}
+.tiles.four{grid-template-columns:repeat(4,minmax(0,1fr));margin-top:-12px}
+.tile .k small{display:block}
+.row{display:flex;gap:10px;margin-top:10px}
+.qbtn{margin-top:14px;border-color:var(--orange);font-family:"Secular One",sans-serif;font-weight:400;font-size:1.3rem}
+.qwrap{background:var(--surface);border:2px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:18px}
+.qwrap h3{margin:0;padding:12px 14px;font-size:1rem;border-bottom:2px solid var(--line)}
+.scroll{overflow-x:auto}
+.qwrap table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.qwrap th,.qwrap td{padding:8px 6px;text-align:center;white-space:nowrap;border-bottom:1px solid var(--line)}
+.qwrap th{font-size:.82rem;color:var(--muted);font-weight:600}
+.qwrap td:first-child,.qwrap th:first-child{text-align:right;padding-right:12px}
+.qwrap tfoot td{font-weight:700;border-bottom:none}
+.qwrap .p{color:var(--orange);font-weight:700}
+.qtag{color:var(--muted);font-size:.85rem}
+.files{margin-top:30px;padding-top:24px;border-top:2px solid var(--line)}
+.files .sub{margin-bottom:14px}
+.panel{background:var(--surface);border:2px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+.panel h3{margin:0 0 4px;font-size:1.05rem}
+.ptext{color:var(--muted);font-size:.92rem;margin:0 0 12px}
+.panel .field input{font-size:1rem;padding:12px}
+details.help{margin-top:12px;font-size:.9rem}
+details.help summary{cursor:pointer;font-weight:700}
+details.help ol{margin:8px 0 0;padding-inline-start:20px;line-height:1.7}
+details.help code{overflow-wrap:anywhere}
+details.help a{color:var(--orange)}
+.psum{margin-top:30px;padding-top:24px;border-top:2px solid var(--line)}
+.psum .sub{margin-bottom:6px}
+table.games tbody tr{cursor:pointer}
+table.games tbody tr:hover,table.games tbody tr:focus-visible{background:var(--press);outline:none}
+table.games td:nth-child(2){max-width:9rem;overflow:hidden;text-overflow:ellipsis}
+.btn-danger{background:transparent;color:var(--danger);border:2px solid var(--danger)}
+.sync{font-size:.8rem;color:var(--muted);margin-top:8px;text-align:center}
+.modal{position:fixed;inset:0;z-index:20;background:rgba(8,14,28,.6);display:flex;align-items:center;justify-content:center;padding:16px}
+.modal[hidden]{display:none}
+.sheet{background:var(--surface);color:var(--ink);border-radius:18px;padding:20px;width:100%;max-width:420px}
+.sheet .sub{margin:6px 0 14px}
+.sheet input{font:inherit;font-size:1.6rem;text-align:center;padding:12px;border:2px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink);width:100%}
+.sheet input:focus{outline:none;border-color:var(--orange)}
+.tile.big.pts2{grid-column:span 2}
+.tile.big.mins{grid-column:span 1}
+.tile.big.mins .v{font-size:2.2rem;color:var(--navy-ink);margin-top:.35rem}
+.last{color:var(--muted);font-size:.95rem;min-height:1.5em;margin-top:12px;text-align:center}
+
+/* summary */
+.sumhead{margin-bottom:16px}
+.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:14px 0 20px}
+.tile{background:var(--surface);border:2px solid var(--line);border-radius:14px;padding:10px 6px;text-align:center;min-width:0;overflow-wrap:anywhere}
+.tile .v{font-family:"Secular One",sans-serif;font-size:clamp(1.4rem,6vw,1.9rem);line-height:1.1}
+.tile .k{font-size:.85rem;color:var(--muted)}
+.tile.big{grid-column:1 / -1;background:var(--navy);color:var(--navy-ink);border-color:var(--navy)}
+.tile.big .v{font-size:3rem;color:var(--orange)}
+.tile.big .k{color:inherit;opacity:.8}
+.log{background:var(--surface);border:2px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:18px}
+.log h3{margin:0;padding:12px 14px;font-size:1rem;border-bottom:2px solid var(--line)}
+.log ol{list-style:none;margin:0;padding:0;max-height:320px;overflow-y:auto}
+.log li{display:flex;justify-content:space-between;padding:9px 14px;border-bottom:1px solid var(--line);font-size:.98rem}
+.log li:last-child{border-bottom:none}
+.log .t{color:var(--muted);font-variant-numeric:tabular-nums;direction:ltr}
+.empty{padding:14px;color:var(--muted)}
+.stack{display:flex;flex-direction:column;gap:10px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--navy);color:var(--navy-ink);padding:10px 18px;border-radius:999px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.show{opacity:1}
+@media (prefers-reduced-motion:reduce){.stat,.toast{transition:none}.stat:active{transform:none}}
+</style>
+</head>
+<body>
+
+<!-- מסך 1: פרטי משחק -->
+<section class="screen active" id="setup">
+  <h1>משחק חדש</h1>
+  <p class="sub">מלאו את פרטי המשחק ולחצו על התחלה.</p>
+  <div class="field"><label for="f-date">תאריך</label><input type="date" id="f-date"></div>
+  <div class="field"><label for="f-player">שם שחקן</label><input type="text" id="f-player" value="ירין אדלר"></div>
+  <div class="field"><label for="f-league">ליגה</label><select id="f-league"></select><input type="text" id="f-league-other" class="other" placeholder="שם הליגה" hidden></div>
+  <div class="field"><label for="f-team">קבוצה</label><select id="f-team"></select><input type="text" id="f-team-other" class="other" placeholder="שם הקבוצה" hidden>
+    <button type="button" class="linkbtn" id="t-edit">עדכון רשימת הקבוצות בליגה</button></div>
+  <div class="field"><label for="f-opp">קבוצה נגדית</label><select id="f-opp"></select><input type="text" id="f-opp-other" class="other" placeholder="שם הקבוצה היריבה" hidden></div>
+  <button class="btn btn-primary" id="start">התחלת משחק</button>
+  <button class="btn btn-ghost resume" id="resume" hidden>המשך משחק פתוח</button>
+
+  <div class="psum" id="psum">
+    <h2 id="ps-title">סיכום שחקן</h2>
+    <p class="sub" id="ps-sub"></p>
+    <div id="ps-body">
+      <div class="tiles" id="ps-tiles"></div>
+      <div class="tiles four" id="ps-tiles2"></div>
+      <div class="qwrap"><h3>משחקים (לחצו על משחק לפירוט)</h3><div class="scroll"><table class="games" id="ps-table"></table></div></div>
+    </div>
+  </div>
+
+  <div class="files">
+    <h2>קבצים ודרייב</h2>
+    <p class="sub" id="fs-status"></p>
+
+    <div class="panel">
+      <h3>Google Drive</h3>
+      <p class="ptext" id="gd-state"></p>
+      <div id="gd-setup">
+        <div class="field"><label for="gd-client">Client ID</label><input id="gd-client" dir="ltr" autocomplete="off" placeholder="xxxx.apps.googleusercontent.com"></div>
+        <div class="field"><label for="gd-folder">קישור לתיקייה בדרייב</label><input id="gd-folder" dir="ltr" autocomplete="off" placeholder="https://drive.google.com/drive/folders/…"></div>
+      </div>
+      <div class="stack">
+        <button class="btn btn-primary" id="gd-connect">התחברות ל-Google Drive</button>
+        <button class="btn btn-primary" id="gd-reauth" hidden>התחברות מחדש</button>
+        <button class="btn btn-ghost" id="gd-sync" hidden>סנכרון עכשיו</button>
+        <button class="btn btn-ghost" id="gd-link" hidden>העתקת קישור הגדרה למכשיר אחר</button>
+        <button class="btn btn-ghost" id="gd-disconnect" hidden>ניתוק מ-Google Drive</button>
+      </div>
+      <details class="help" id="gd-help"></details>
+    </div>
+
+    <div class="panel" id="lf-panel" hidden>
+      <h3>תיקייה במחשב</h3>
+      <p class="ptext" id="lf-state"></p>
+      <div class="stack">
+        <button class="btn btn-ghost" id="lf-connect">בחירת תיקייה</button>
+        <button class="btn btn-primary" id="lf-relink" hidden>חידוש ההרשאה לתיקייה</button>
+        <button class="btn btn-ghost" id="lf-disconnect" hidden>ניתוק התיקייה</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>גיבוי ידני</h3>
+      <p class="ptext" id="bk-state"></p>
+      <div class="stack">
+        <button class="btn btn-ghost" id="fs-export">שמירת גיבוי לקובץ</button>
+        <button class="btn btn-ghost" id="fs-import">טעינה מקובץ</button>
+      </div>
+    </div>
+    <input type="file" id="fs-input" accept=".json,application/json" hidden>
+  </div>
+</section>
+
+<!-- מסך 2: מעקב -->
+<section class="screen" id="track">
+  <div class="board">
+    <div>
+      <div class="who" id="b-player"></div>
+      <div class="vs" id="b-vs"></div>
+    </div>
+    <div class="pts"><div class="num" id="b-pts">0</div><div class="lbl">נקודות</div></div>
+  </div>
+  <div class="grid" id="grid"></div>
+  <div class="last" id="last" aria-live="polite"></div>
+  <button class="btn btn-ghost qbtn" id="quarter">רבע ראשון</button>
+  <div class="row">
+    <button class="btn btn-ghost" id="undo" disabled>ביטול אחרון</button>
+    <button class="btn btn-dark" id="finish">סיום וסיכום</button>
+  </div>
+</section>
+
+<!-- מסך 3: סיכום -->
+<section class="screen" id="summary">
+  <div class="sumhead">
+    <h1 id="s-player"></h1>
+    <p class="sub" id="s-meta" style="margin-bottom:0"></p>
+  </div>
+  <div class="tiles" id="tiles"></div>
+  <div class="tiles four" id="tiles2"></div>
+  <div class="qwrap"><h3>חלוקה לפי רבע</h3><div class="scroll"><table id="qtable"></table></div></div>
+  <div class="log"><h3>תיעוד מהלכים</h3><ol id="log"></ol></div>
+  <div class="stack">
+    <button class="btn btn-primary" id="share">שיתוף הסיכום</button>
+    <button class="btn btn-ghost" id="back">המשך תיעוד המשחק</button>
+    <button class="btn btn-dark" id="home">למסך הראשי</button>
+    <button class="btn btn-danger" id="delete">מחיקת המשחק</button>
+  </div>
+</section>
+
+<div class="modal" id="modal" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="m-title">
+    <h2 id="m-title"></h2>
+    <p class="sub" id="m-sub"></p>
+    <input type="number" id="m-input" inputmode="decimal" min="0" step="0.5" placeholder="למשל 7">
+    <button class="btn btn-primary" id="m-ok" style="margin-top:14px">שמירה</button>
+    <div class="row">
+      <button class="btn btn-ghost" id="m-skip">דילוג</button>
+      <button class="btn btn-ghost" id="m-cancel">ביטול</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="tmodal" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="t-title">
+    <h2 id="t-title">רשימת הקבוצות</h2>
+    <p class="sub" id="t-sub"></p>
+    <a class="linkbtn" id="t-link" target="_blank" rel="noopener" hidden style="display:inline-block;margin:0 0 10px">פתיחת דף הליגה באתר האיגוד ↗</a>
+    <button class="btn btn-ghost" id="t-photo" type="button" style="margin-bottom:10px">📷 קליטת הרשימה מתמונה</button>
+    <input type="file" id="t-img" accept="image/*" hidden>
+    <p class="ocr-status" id="t-status" hidden></p>
+    <textarea id="t-text" rows="9" placeholder="קבוצה בכל שורה"></textarea>
+    <button class="btn btn-primary" id="t-ok" style="margin-top:12px">שמירת הרשימה</button>
+    <div class="row"><button class="btn btn-ghost" id="t-cancel">ביטול</button></div>
+  </div>
+</div>
+
+<div class="modal" id="cmodal" hidden>
+  <div class="sheet" role="alertdialog" aria-modal="true" aria-labelledby="c-text">
+    <h2 id="c-text"></h2>
+    <div class="row" style="margin-top:16px">
+      <button class="btn btn-ghost" id="c-no">ביטול</button>
+      <button class="btn btn-primary" id="c-ok"></button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const STATS = [
+  {id:'fg',   name:'סל',     pts:2, hint:'2 נק׳'},
+  {id:'three',name:'שלשה',   pts:3, hint:'3 נק׳'},
+  {id:'ft',   name:'עונשין', pts:1, hint:'1 נק׳'},
+  {id:'reb',  name:'ריבאונד',pts:0},
+  {id:'ast',  name:'אסיסט',  pts:0},
+  {id:'blk',  name:'גג',     pts:0},
+  {id:'stl',  name:'חטיפה',  pts:0},
+  {id:'m3',   name:'החטאה ל-3', pts:0, miss:true},
+  {id:'m2',   name:'החטאה ל-2', pts:0, miss:true},
+  {id:'m1',   name:'החטאה ל-1', pts:0, miss:true},
+];
+const SHOTS = [
+  {made:'fg',    miss:'m2', label:'זריקות ל-2'},
+  {made:'three', miss:'m3', label:'זריקות ל-3'},
+  {made:'ft',    miss:'m1', label:'עונשין'},
+];
+const OTHER = ['reb','ast','blk','stl'];
+const QUARTERS = ['ראשון','שני','שלישי','רביעי'];
+const fmtMin = v => v==null ? '–' : String(Math.round(v*10)/10);
+const fmt1 = v => String(Math.round(v*10)/10);
+const totalMin = (g=game) => { const v=Object.values(g.minutes||{}).filter(x=>x!=null); return v.length ? v.reduce((a,b)=>a+b,0) : null; };
+
+const $ = id => document.getElementById(id);
+const today = () => { const d=new Date(); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); return d.toISOString().slice(0,10); };
+const fmtDate = s => { const [y,m,d]=s.split('-'); return `${d}/${m}/${y}`; };
+const fmtClock = ts => new Date(ts).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+const fmtElapsed = ms => { const s=Math.floor(ms/1000); return `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`; };
+const countsOf = (g,q) => { const c={}; STATS.forEach(s=>c[s.id]=0); (g.events||[]).forEach(e=>{ if(!q||(e.q||1)===q) c[e.stat]++; }); return c; };
+const counts = (q) => countsOf(game,q);
+const points = c => STATS.reduce((sum,s)=>sum+c[s.id]*s.pts,0);
+const statById = id => STATS.find(s=>s.id===id);
+const esc = t => String(t).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+
+function show(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id===id)); window.scrollTo(0,0); }
+function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),1600); }
+
+/* ---------- שמירה בדפדפן ---------- */
+const LS_GAMES='yarin-games', LS_CUR='yarin-current-id';
+const lsGet = k => { try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } };
+const lsSet = (k,v) => { try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} };
+let games = lsGet(LS_GAMES) || {};
+let currentId = lsGet(LS_CUR);
+let game = null;
+// העברת משחק פתוח מהגרסה הקודמת
+const legacy = lsGet('yarin-current-game');
+if (legacy && !legacy.id){ legacy.id='g'+(legacy.startedAt||Date.now()); legacy.updatedAt=Date.now(); games[legacy.id]=legacy; currentId=legacy.id;
+  lsSet(LS_GAMES,games); lsSet(LS_CUR,currentId); try{ localStorage.removeItem('yarin-current-game'); }catch(e){} }
+
+function persistLocal(){ lsSet(LS_GAMES,games); lsSet(LS_CUR,currentId); }
+function save(){ game.updatedAt=Date.now(); games[game.id]=game; persistLocal(); }
+function removeGame(id){ games[id]={id, deleted:true, updatedAt:Date.now()}; if (currentId===id) currentId=null; persistLocal(); }
+
+
+/* ---------- חלון אישור ---------- */
+let confirmOk=null;
+function askConfirm(text, okLabel, onOk){ confirmOk=onOk; $('c-text').textContent=text; $('c-ok').textContent=okLabel; $('cmodal').hidden=false; }
+$('c-ok').onclick = () => { const f=confirmOk; $('cmodal').hidden=true; confirmOk=null; f&&f(); };
+$('c-no').onclick = () => { $('cmodal').hidden=true; confirmOk=null; };
+$('cmodal').addEventListener('click', e => { if (e.target.id==='cmodal') $('c-no').click(); });
+
+/* ---------- מסך ראשי ---------- */
+$('f-date').value = today();
+function renderHome(){
+  $('resume').hidden = !(currentId && games[currentId] && !games[currentId].deleted);
+  const player = $('f-player').value.trim();
+  const list = Object.values(games).filter(g=>!g.deleted && g.player===player)
+    .sort((a,b)=> (b.date||'').localeCompare(a.date||'') || (b.startedAt||0)-(a.startedAt||0));
+  $('ps-title').textContent = `סיכום ${player || 'שחקן'}`;
+  if (!list.length){
+    $('ps-sub').textContent = 'עדיין אין משחקים שמורים. אחרי המשחק הראשון יופיעו כאן הממוצעים וטבלת המשחקים.';
+    $('ps-body').hidden = true; return;
+  }
+  $('ps-body').hidden = false;
+  const n=list.length, cs=list.map(g=>countsOf(g));
+  const sum = id => cs.reduce((a,c)=>a+c[id],0);
+  const mins = list.map(g=>totalMin(g)).filter(v=>v!=null);
+  const avgPts = cs.reduce((a,c)=>a+points(c),0)/n;
+  $('ps-sub').textContent = n===1 ? 'ממוצעים על פני משחק אחד' : `ממוצעים למשחק, על פני ${n} משחקים`;
+  $('ps-tiles').innerHTML =
+    `<div class="tile big pts2"><div class="v">${fmt1(avgPts)}</div><div class="k">נקודות למשחק</div></div>` +
+    `<div class="tile big mins"><div class="v">${mins.length?fmt1(mins.reduce((a,b)=>a+b,0)/mins.length):'–'}</div><div class="k">דקות למשחק</div></div>` +
+    SHOTS.map(s=>{ const m=sum(s.made), a=m+sum(s.miss);
+      return `<div class="tile"><div class="v">${a?Math.round(m/a*100)+'%':'–'}</div><div class="k">${s.label}<small dir="ltr">${m}/${a}</small></div></div>`; }).join('');
+  $('ps-tiles2').innerHTML = OTHER.map(id=>`<div class="tile"><div class="v">${fmt1(sum(id)/n)}</div><div class="k">${statById(id).name}</div></div>`).join('');
+  $('ps-table').innerHTML =
+    `<thead><tr><th>תאריך</th><th>יריבה</th><th>נק׳</th><th>דק׳</th><th>ל-2</th><th>ל-3</th><th>עונשין</th><th>ריב׳</th><th>אס׳</th><th>גג</th><th>חט׳</th></tr></thead><tbody>` +
+    list.map((g,i)=>{ const c=cs[i];
+      return `<tr data-id="${esc(g.id)}" tabindex="0"><td>${fmtDate(g.date)}</td><td>${esc(g.opponent)}</td><td class="p">${points(c)}</td><td>${fmtMin(totalMin(g))}</td>` +
+        SHOTS.map(s=>`<td dir="ltr">${c[s.made]}/${c[s.made]+c[s.miss]}</td>`).join('') +
+        OTHER.map(id=>`<td>${c[id]}</td>`).join('') + `</tr>`; }).join('') + '</tbody>';
+}
+function openGame(id){ if (!games[id] || games[id].deleted) return; game=games[id]; renderSummary(); show('summary'); }
+$('ps-table').addEventListener('click', e => { const tr=e.target.closest('tr[data-id]'); if (tr) openGame(tr.dataset.id); });
+$('ps-table').addEventListener('keydown', e => { if (e.key==='Enter'){ const tr=e.target.closest('tr[data-id]'); if (tr) openGame(tr.dataset.id); } });
+$('f-player').addEventListener('input', renderHome);
+function goHome(){ $('f-date').value=today(); renderSetupLists(); renderHome(); renderFiles(); show('setup'); }
+
+/* ---------- ליגות וקבוצות ---------- */
+const OTHER_OPT='__other';
+// ליגות ילדים א לעונת 2026-27, לפי תפריט הליגות באתר איגוד הכדורסל
+const LEAGUES = [
+  'ילדים א מרכז','ילדים א תל אביב','ילדים א בקעת אונו','ילדים א פתח תקווה','ילדים א כפר סבא','ילדים א רמת השרון',
+  'ילדים א שרון','ילדים א מודיעין','ילדים א ירושלים','ילדים א דרום','ילדים א נגב',
+  'ילדים א צפון','ילדים א חיפה','ילדים א עמקים','ילדים א גלבוע','ילדים א שומרון',
+  'ילדים א לאומית ת"א','ילדים א לאומית י-ם','ילדים א לאומית דרום',
+  'ילדים א צפון נבא','ילדים א מרכז נבא','ילדים א דרום נבא',
+  'ילדים א מרכז תחתון','ילדים א ת-א תחתון','ילדים א שומרון תחתון','ילדים א צפון תחתון'
+];
+// קבוצות עונת 2026-27. את שאר הקבוצות מעדכנים מהאפליקציה (״עדכון רשימת הקבוצות״) או מהמשחקים שמתועדים
+const SEED_TEAMS = {
+  'ילדים א מרכז': ['אליצור רחובות','מכבי ראשל"צ אתרוג','מכבי רחובות ויצמן','הפועל באר יעקב','הפועל ברנר אביב',
+    'הפועל נס ציונה/גן רווה','מכבי ראשון לציון זוה','מכבי באר יעקב איתי','אליצור יבנה שלמה','הפועל נצר סרני אריק','הפועל נס ציונה אגוז']
+};
+// קישורים לדפי הליגות באתר האיגוד, לעונת 2026-27
+const LEAGUE_URLS = { 'ילדים א מרכז': 'https://ibasketball.co.il/league/2026-274/' };
+const LS_TEAMS='yarin-teams', LS_SETUP='yarin-last-setup', DEF_LEAGUE='ילדים א מרכז', DEF_TEAM='הפועל נס ציונה אגוז';
+let customTeams = lsGet(LS_TEAMS) || {};
+(function fixEgozLeague(){
+  const last=lsGet(LS_SETUP);
+  if (last && last.team===DEF_TEAM && last.league==='ילדים א שפלה'){ last.league=DEF_LEAGUE; lsSet(LS_SETUP,last); }
+  let changed=false;
+  Object.values(games).forEach(g=>{ if (!g.deleted && g.league==='ילדים א שפלה' && g.team===DEF_TEAM && (g.date||'')>='2026-08-01'){ g.league=DEF_LEAGUE; g.updatedAt=Date.now(); changed=true; } });
+  if (changed) persistLocal();
+})();
+const uniq = arr => [...new Set(arr.filter(Boolean))];
+function leagueList(){
+  const extra = uniq([...(customTeams.__leagues||[]), ...Object.values(games).filter(g=>!g.deleted).map(g=>g.league)]).filter(l=>!LEAGUES.includes(l));
+  return [...LEAGUES, ...extra];
+}
+function teamsFor(league){
+  const fromGames = Object.values(games).filter(g=>!g.deleted && g.league===league).flatMap(g=>[g.team,g.opponent]);
+  if ((customTeams.__replaced||[]).includes(league)) return uniq(customTeams[league]||[]).sort((a,b)=>a.localeCompare(b,'he'));
+  return uniq([...(SEED_TEAMS[league]||[]), ...(customTeams[league]||[]), ...fromGames]).sort((a,b)=>a.localeCompare(b,'he'));
+}
+function readSel(id){ return $(id).value===OTHER_OPT ? $(id+'-other').value.trim() : $(id).value; }
+function fillSelect(id, items, value, otherLabel, placeholder){
+  const sel=$(id);
+  sel.innerHTML = (placeholder?`<option value="">${placeholder}</option>`:'') + items.map(t=>`<option>${esc(t)}</option>`).join('') + `<option value="${OTHER_OPT}">${otherLabel}</option>`;
+  if (value && items.includes(value)) sel.value=value;
+  else if (value){ sel.value=OTHER_OPT; $(id+'-other').value=value; }
+  else sel.value = items.length || !placeholder ? (placeholder?'':items[0]) : OTHER_OPT;
+  $(id+'-other').hidden = sel.value!==OTHER_OPT;
+}
+function renderOpp(keep){
+  const mine=readSel('f-team');
+  fillSelect('f-opp', teamsFor(readSel('f-league')).filter(t=>t!==mine), keep, '➕ קבוצה אחרת…', 'בחרו קבוצה יריבה');
+}
+function renderTeams(){
+  const last=lsGet(LS_SETUP)||{}, league=readSel('f-league'), teams=teamsFor(league);
+  const team = last.league===league && last.team ? last.team : (teams.includes(DEF_TEAM) ? DEF_TEAM : '');
+  fillSelect('f-team', teams, team, '➕ קבוצה אחרת…', 'בחרו קבוצה');
+  renderOpp('');
+}
+function renderSetupLists(){
+  const last=lsGet(LS_SETUP)||{};
+  fillSelect('f-league', leagueList(), last.league || DEF_LEAGUE, '➕ ליגה אחרת…');
+  renderTeams();
+}
+function showOther(id){ const o=$(id+'-other'); o.hidden = $(id).value!==OTHER_OPT; if (!o.hidden){ o.value=''; o.focus(); } }
+$('f-league').onchange = () => { showOther('f-league'); renderTeams(); };
+$('f-league-other').onchange = renderTeams;
+$('f-team').onchange = () => { showOther('f-team'); renderOpp(readSel('f-opp')); };
+$('f-team-other').onchange = () => renderOpp(readSel('f-opp'));
+$('f-opp').onchange = () => showOther('f-opp');
+/* עדכון רשימת קבוצות: מדביקים את הטבלה מאתר האיגוד או שם בכל שורה */
+const HEADER_WORDS = /^(מיקום|קבוצה|מש׳|מש'|ניצ׳|הפ׳|טכני|קלעה|ספגה|הפרש|נק׳|רגילה|משחקים|טבלה)$/;
+function parseTeams(text){
+  const out=[];
+  text.split(/\r?\n/).forEach(line=>{
+    const cells=line.split(/\t|\||\s{2,}/).map(c=>c.trim()).filter(Boolean);
+    const name=cells.find(c=>/[\u0590-\u05FF]/.test(c) && !HEADER_WORDS.test(c));
+    if (name) out.push(name.replace(/^\d+[.)]?\s*/,''));
+  });
+  return uniq(out);
+}
+$('t-edit').onclick = () => {
+  const league=readSel('f-league');
+  if (!league){ toast('בחרו קודם ליגה'); return; }
+  $('t-title').textContent = `קבוצות ${league}`;
+  $('t-sub').textContent = 'אפשר להעתיק את טבלת הליגה מאתר איגוד הכדורסל ולהדביק כאן כמו שהיא, או לכתוב קבוצה בכל שורה. הרשימה תחליף את הקיימת.';
+  const url=LEAGUE_URLS[league]; $('t-link').hidden=!url; if (url) $('t-link').href=url+'#teams';
+  $('t-text').value = teamsFor(league).join('\n'); $('t-status').hidden=true;
+  $('tmodal').hidden=false;
+};
+$('t-cancel').onclick = () => { $('tmodal').hidden=true; };
+
+/* קליטת רשימת קבוצות מתמונה (זיהוי טקסט בעברית בתוך הדפדפן) */
+// מנוע זיהוי הטקסט נטען מהאינטרנט. אם מקור אחד חסום (למשל בסינון אינטרנט), עוברים למקור הבא
+const OCR_SOURCES = [
+  { name:'jsdelivr', lib:'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js', opts:{} },
+  { name:'unpkg', lib:'https://unpkg.com/tesseract.js@5.1.1/dist/tesseract.min.js',
+    opts:{ workerPath:'https://unpkg.com/tesseract.js@5.1.1/dist/worker.min.js', corePath:'https://unpkg.com/tesseract.js-core@5.1.1',
+           langPath:'https://raw.githubusercontent.com/tesseract-ocr/tessdata_fast/main', gzip:false } }
+];
+const libLoaded={};
+function loadScript(src){
+  if (libLoaded[src]) return libLoaded[src];
+  return libLoaded[src]=new Promise((res,rej)=>{ const sc=document.createElement('script'); sc.src=src; sc.onload=res; sc.onerror=()=>{ delete libLoaded[src]; rej(new Error('הספרייה לא נטענה')); }; document.head.appendChild(sc); });
+}
+const withTimeout = (p, ms, msg) => Promise.race([p, new Promise((_,rej)=>setTimeout(()=>rej(new Error(msg)), ms))]);
+async function ocrWorker(onProgress){
+  let lastErr;
+  for (const src of OCR_SOURCES){
+    try{
+      if (!window.Tesseract) await withTimeout(loadScript(src.lib), 20000, 'טעינת הספרייה ארכה יותר מדי');
+      return await withTimeout(Tesseract.createWorker('heb', 1, { ...src.opts, logger:onProgress }), 60000, 'טעינת מודל העברית ארכה יותר מדי');
+    }catch(e){ lastErr=new Error(`${src.name}: ${e && e.message || e}`); }
+  }
+  throw lastErr;
+}
+async function prepImage(file){
+  // הגדלה והמרה לאפור משפרות את הזיהוי בצילומי מסך קטנים
+  const url=URL.createObjectURL(file);
+  try{
+    const img=await new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=rej; i.src=url; });
+    const scale = img.width < 1400 ? Math.min(3, 1400/img.width) : 1;
+    const c=document.createElement('canvas'); c.width=Math.round(img.width*scale); c.height=Math.round(img.height*scale);
+    const ctx=c.getContext('2d'); ctx.filter='grayscale(1) contrast(1.3)'; ctx.drawImage(img,0,0,c.width,c.height);
+    return c;
+  } finally { URL.revokeObjectURL(url); }
+}
+const NOT_TEAM = /^(מיקום|קבוצה|קבוצות|שחקנים|משחקים|טבלה|רגילה|מש|ניצ|הפ|טכני|קלעה|ספגה|הפרש|נק|ליגה)$/;
+function parseOcr(text){
+  const out=[];
+  text.split(/\r?\n/).forEach(line=>{
+    // משאירים רק מילים עם אותיות; מספרים, אחוזים וסימנים של הטבלה יורדים
+    const words=line.replace(/[|_\[\]{}<>©®•·]/g,' ').split(/\s+/)
+      .filter(w=>/[\u0590-\u05FFa-zA-Z]/.test(w)).map(w=>w.replace(/^[^\u0590-\u05FFa-zA-Z"'׳״.]+|[^\u0590-\u05FFa-zA-Z"'׳״.\/]+$/g,''))
+      .filter(Boolean);
+    if (!words.length) return;
+    const name=words.join(' ').trim();
+    const letters=(name.match(/[\u0590-\u05FF]/g)||[]).length;
+    if (letters<4) return;
+    if (words.every(w=>NOT_TEAM.test(w.replace(/[׳'"״]/g,'')))) return;
+    if (/^(ילדים|ילדות|נערים|נערות)(\s|$)/.test(name)) return;
+    out.push(name);
+  });
+  return uniq(out);
+}
+$('t-photo').onclick = () => { $('t-img').value=''; $('t-img').click(); };
+$('t-img').onchange = async () => {
+  const f=$('t-img').files[0]; if (!f) return;
+  const st=$('t-status'); st.hidden=false; $('t-photo').disabled=true; $('t-ok').disabled=true;
+  let worker=null;
+  const progress = m => {
+    if (m.status==='recognizing text') st.textContent=`מזהה את הקבוצות בתמונה… ${Math.round(m.progress*100)}%`;
+    else if (/load/i.test(m.status||'')) st.textContent='טוען את מנוע זיהוי הטקסט (בפעם הראשונה זה לוקח כמה שניות)…';
+  };
+  try{
+    st.textContent='טוען את מנוע זיהוי הטקסט (בפעם הראשונה זה לוקח כמה שניות)…';
+    worker=await ocrWorker(progress);
+    // קודם התמונה המקורית; אם לא זוהה כלום, ניסיון נוסף עם תמונה מוגדלת
+    let text=(await withTimeout(worker.recognize(f), 90000, 'הזיהוי ארך יותר מדי')).data.text||'';
+    let list=parseOcr(text);
+    if (!list.length){ text=(await withTimeout(worker.recognize(await prepImage(f)), 90000, 'הזיהוי ארך יותר מדי')).data.text||''; list=parseOcr(text); }
+    if (!list.length){ st.textContent='לא זוהו שמות קבוצות בתמונה. נסו צילום מסך חד יותר של רשימת הקבוצות.'; return; }
+    $('t-text').value = list.join('\n');
+    st.textContent = `זוהו ${list.length} קבוצות. בדקו ותקנו את השמות אם צריך, ואז לחצו "שמירת הרשימה".`;
+  }catch(e){
+    st.textContent = `זיהוי הטקסט נכשל (${e && e.message || e}). אם יש סינון אינטרנט כמו נטפרי או רימון, ייתכן שהוא חוסם את הורדת מנוע הזיהוי. בינתיים אפשר להעתיק את הרשימה ולהדביק אותה בתיבה.`;
+  }finally{
+    if (worker) try{ await worker.terminate(); }catch(e){}
+    $('t-photo').disabled=false; $('t-ok').disabled=false;
+  }
+};
+$('t-ok').onclick = () => {
+  const league=readSel('f-league'), list=parseTeams($('t-text').value);
+  if (!list.length){ toast('לא נמצאו שמות קבוצות'); return; }
+  customTeams[league]=list; customTeams.__replaced=uniq([...(customTeams.__replaced||[]), league]);
+  lsSet(LS_TEAMS, customTeams); $('tmodal').hidden=true;
+  const keep=readSel('f-team'); renderTeams(); if (list.includes(keep)) { $('f-team').value=keep; renderOpp(''); }
+  toast(`נשמרו ${list.length} קבוצות`);
+};
+function rememberTeam(league, name){
+  if (!league || !name) return;
+  if (!LEAGUES.includes(league)){ customTeams.__leagues = uniq([...(customTeams.__leagues||[]), league]); }
+  if (!teamsFor(league).includes(name)) customTeams[league] = uniq([...(customTeams[league]||[]), name]);
+  lsSet(LS_TEAMS, customTeams);
+}
+
+$('start').onclick = () => {
+  const league=readSel('f-league'), team=readSel('f-team'), opp=readSel('f-opp');
+  if (!league){ $('f-league-other').focus(); toast('בחרו ליגה'); return; }
+  if (!team){ ($('f-team').value===OTHER_OPT?$('f-team-other'):$('f-team')).focus(); toast('בחרו את הקבוצה'); return; }
+  if (!opp){ ($('f-opp').value===OTHER_OPT?$('f-opp-other'):$('f-opp')).focus(); toast('בחרו את הקבוצה היריבה'); return; }
+  if (team===opp){ toast('הקבוצה והקבוצה היריבה זהות'); return; }
+  rememberTeam(league, team); rememberTeam(league, opp);
+  lsSet(LS_SETUP, {league, team});
+  const now = Date.now();
+  game = {
+    id: 'g'+now,
+    date: $('f-date').value || today(),
+    player: $('f-player').value.trim() || 'ירין אדלר',
+    league, team, opponent: opp,
+    startedAt: now, quarter: 1, minutes: {}, events: []
+  };
+  currentId = game.id; save(); openTracker();
+};
+$('resume').onclick = () => { if (games[currentId] && !games[currentId].deleted){ game=games[currentId]; openTracker(); } };
+
+/* tracker */
+function buildGrid(){
+  const g=$('grid'); g.innerHTML='';
+  STATS.forEach((s,i)=>{
+    const b=document.createElement('button');
+    b.className='stat'+(s.pts?' score':'')+(s.miss?' miss':'')+(i===STATS.length-1&&STATS.length%2===1?' wide':'');
+    b.id='btn-'+s.id;
+    b.innerHTML=`<span class="name">${s.name}</span><span class="val" id="c-${s.id}">0</span>${s.hint?`<span class="hint">${s.hint}</span>`:''}`;
+    b.onclick=()=>record(s.id,b);
+    g.appendChild(b);
+  });
+}
+function openTracker(){
+  if (!game.quarter) game.quarter = 1;
+  if (!game.minutes) game.minutes = {};
+  $('b-player').textContent = game.player;
+  $('b-vs').textContent = `${game.team} נגד ${game.opponent}`;
+  refresh(); show('track');
+}
+function refresh(){
+  const c=counts();
+  STATS.forEach(s=>$('c-'+s.id).textContent=c[s.id]);
+  $('b-pts').textContent=points(c);
+  $('undo').disabled = game.events.length===0;
+  $('quarter').textContent = `רבע ${QUARTERS[game.quarter-1]}`;
+  const e=game.events[game.events.length-1];
+  $('last').textContent = e ? `אחרון: ${statById(e.stat).name} ב-${fmtClock(e.t)}, רבע ${QUARTERS[(e.q||1)-1]}` : 'לחצו על מהלך כדי לתעד אותו';
+}
+function record(id,btn){
+  game.events.push({stat:id,t:Date.now(),q:game.quarter});
+  save(); refresh();
+  btn.classList.add('flash'); setTimeout(()=>btn.classList.remove('flash'),180);
+  if (navigator.vibrate) try{navigator.vibrate(25)}catch(e){}
+}
+$('undo').onclick = () => {
+  const e=game.events.pop(); if(!e) return;
+  save(); refresh(); toast(`בוטל: ${statById(e.stat).name}`);
+};
+/* חלון דקות */
+let modalNext = null;
+function askMinutes(q, okLabel, next){
+  modalNext = next;
+  $('m-title').textContent = `דקות משחק ברבע ${QUARTERS[q-1]}`;
+  $('m-sub').textContent = `כמה דקות שיחק ${game.player} ברבע הזה?`;
+  const cur = game.minutes[q];
+  $('m-input').value = cur!=null ? cur : '';
+  $('m-ok').textContent = okLabel;
+  $('m-ok').dataset.q = q;
+  $('modal').hidden = false;
+  setTimeout(()=>$('m-input').focus(), 50);
+}
+function closeModal(){ $('modal').hidden = true; modalNext = null; }
+$('m-ok').onclick = () => {
+  const q = +$('m-ok').dataset.q, raw = $('m-input').value.trim().replace(',', '.');
+  if (raw !== ''){
+    const v = parseFloat(raw);
+    if (isNaN(v) || v < 0){ toast('הזינו מספר דקות תקין'); return; }
+    game.minutes[q] = v;
+  }
+  save(); const n = modalNext; closeModal(); n && n();
+};
+$('m-skip').onclick = () => { const n = modalNext; closeModal(); n && n(); };
+$('m-cancel').onclick = closeModal;
+$('m-input').addEventListener('keydown', e => { if (e.key === 'Enter') $('m-ok').click(); });
+$('modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
+
+$('quarter').onclick = () => {
+  const nextQ = game.quarter % 4 + 1;
+  askMinutes(game.quarter, `שמירה ומעבר לרבע ${QUARTERS[nextQ-1]}`, () => {
+    game.quarter = nextQ;
+    save(); refresh(); toast(`עברנו לרבע ${QUARTERS[game.quarter-1]}`);
+  });
+};
+const goSummary = () => { renderSummary(); show('summary'); };
+$('finish').onclick = () => {
+  if (game.minutes[game.quarter] == null) askMinutes(game.quarter, 'שמירה ומעבר לסיכום', goSummary);
+  else goSummary();
+};
+
+/* summary */
+function renderSummary(){
+  const c=counts(), p=points(c);
+  $('s-player').textContent = game.player;
+  $('s-meta').textContent = `${game.team} נגד ${game.opponent}, ${fmtDate(game.date)}${game.league?' · '+game.league:''}`;
+  const tiles=$('tiles');
+  tiles.innerHTML = `<div class="tile big pts2"><div class="v">${p}</div><div class="k">נקודות</div></div>` +
+    `<div class="tile big mins"><div class="v">${fmtMin(totalMin())}</div><div class="k">דקות</div></div>` +
+    SHOTS.map(s=>{ const m=c[s.made], a=m+c[s.miss]; const pct=a?Math.round(m/a*100)+'%':'–';
+      return `<div class="tile"><div class="v" dir="ltr">${m}/${a}</div><div class="k">${s.label}<small>${pct}</small></div></div>`; }).join('');
+  $('tiles2').innerHTML = OTHER.map(id=>`<div class="tile"><div class="v">${c[id]}</div><div class="k">${statById(id).name}</div></div>`).join('');
+  const row = (label,cc,mn) => `<td>${label}</td><td>${fmtMin(mn)}</td><td class="p">${points(cc)}</td>` +
+    SHOTS.map(s=>`<td dir="ltr">${cc[s.made]}/${cc[s.made]+cc[s.miss]}</td>`).join('') +
+    OTHER.map(id=>`<td>${cc[id]}</td>`).join('');
+  $('qtable').innerHTML =
+    `<thead><tr><th>רבע</th><th>דק׳</th><th>נק׳</th><th>ל-2</th><th>ל-3</th><th>עונשין</th><th>ריב׳</th><th>אס׳</th><th>גג</th><th>חט׳</th></tr></thead>` +
+    '<tbody>' + QUARTERS.map((n,i)=>`<tr>${row(n,counts(i+1),(game.minutes||{})[i+1])}</tr>`).join('') + '</tbody>' +
+    `<tfoot><tr>${row('סה״כ',c,totalMin())}</tr></tfoot>`;
+  const log=$('log');
+  log.innerHTML = game.events.length
+    ? game.events.map((e,i)=>`<li><span>${i+1}. ${statById(e.stat).name} <span class="qtag">רבע ${QUARTERS[(e.q||1)-1]}</span></span><span class="t">${fmtClock(e.t)} (+${fmtElapsed(e.t-game.startedAt)})</span></li>`).join('')
+    : '<li class="empty">עדיין לא תועדו מהלכים.</li>';
+}
+function summaryText(){
+  const c=counts();
+  const lines=[`🏀 ${game.player}`, `${game.team} נגד ${game.opponent}`, ...(game.league?[game.league]:[]), fmtDate(game.date), '', `נקודות: ${points(c)}`, `דקות: ${fmtMin(totalMin())}`];
+  SHOTS.forEach(s=>{ const m=c[s.made], a=m+c[s.miss]; lines.push(`${s.label}: ${m}/${a}${a?` (${Math.round(m/a*100)}%)`:''}`); });
+  OTHER.forEach(id=>lines.push(`${statById(id).name}: ${c[id]}`));
+  lines.push('', 'לפי רבע:');
+  QUARTERS.forEach((n,i)=>lines.push(`רבע ${n}: ${points(counts(i+1))} נק׳, ${fmtMin((game.minutes||{})[i+1])} דק׳`));
+  return lines.join('\n');
+}
+$('share').onclick = async () => {
+  const text=summaryText();
+  if (navigator.share){ try{ await navigator.share({text}); return; }catch(e){ if(e.name==='AbortError') return; } }
+  try{ await navigator.clipboard.writeText(text); toast('הסיכום הועתק'); }catch(e){ toast('לא ניתן להעתיק במכשיר זה'); }
+};
+$('back').onclick = () => { currentId = game.id; persistLocal(); openTracker(); };
+$('home').onclick = goHome;
+$('delete').onclick = () => askConfirm(`למחוק את המשחק נגד ${game.opponent}?`, 'מחיקה', () => {
+  removeGame(game.id); game=null; toast('המשחק נמחק'); goHome();
+});
+
+/* ---------- קבצים, תיקייה ו-Google Drive ---------- */
+const LS_BACKUP='yarin-last-backup';
+const fmtStamp = ts => new Date(ts).toLocaleString('he-IL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+const lsRaw = k => { try{ return localStorage.getItem(k)||''; }catch(e){ return ''; } };
+const lsRawSet = (k,v) => { try{ v ? localStorage.setItem(k,v) : localStorage.removeItem(k); }catch(e){} };
+const liveCount = () => Object.values(games).filter(g=>!g.deleted).length;
+
+/* מיזוג משחק שהגיע מבחוץ: הגרסה שעודכנה אחרונה מנצחת */
+function mergeIn(g){
+  if (!g || !g.id || (!g.deleted && !Array.isArray(g.events))) return false;
+  const cur = games[g.id];
+  if (!cur || (g.updatedAt||0) > (cur.updatedAt||0)){ games[g.id]=g; return true; }
+  return false;
+}
+function afterMerge(ids, from){
+  if (!ids.length) return;
+  persistLocal();
+  if (game && games[game.id] && games[game.id]!==game){
+    game = games[game.id];
+    if (game.deleted){ game=null; if (!$('setup').classList.contains('active')) goHome(); }
+    else { if ($('track').classList.contains('active')) refresh(); if ($('summary').classList.contains('active')) renderSummary(); }
+  }
+  if ($('setup').classList.contains('active')) renderHome();
+  ids.forEach(id=>notifySinks(id, from));
+  renderFiles();
+}
+function notifySinks(id, except){
+  if (except!=='lf' && LF.ready()) LF.queue(id);
+  if (except!=='gd' && GD.ready()) GD.queue(id);
+}
+
+/* IndexedDB קטן לשמירת ההרשאה לתיקייה */
+function idb(){ return new Promise((res,rej)=>{ const r=indexedDB.open('yarin-stats',1); r.onupgradeneeded=()=>r.result.createObjectStore('kv'); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }); }
+async function idbSet(k,v){ try{ const d=await idb(); await new Promise((res,rej)=>{ const t=d.transaction('kv','readwrite'); v===undefined?t.objectStore('kv').delete(k):t.objectStore('kv').put(v,k); t.oncomplete=res; t.onerror=()=>rej(t.error); }); }catch(e){} }
+async function idbGet(k){ try{ const d=await idb(); return await new Promise((res,rej)=>{ const r=d.transaction('kv').objectStore('kv').get(k); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }); }catch(e){ return null; } }
+
+/* ----- תיקייה במחשב (כרום / אדג׳) ----- */
+const LF_API = ('showDirectoryPicker' in window) && window.self===window.top;
+const LF = {
+  dir:null, needPerm:false, timers:{}, chain:Promise.resolve(), last:0,
+  ready(){ return !!this.dir && !this.needPerm; },
+  async gamesDir(){ return this.dir.getDirectoryHandle('games',{create:true}); },
+  async pull(){
+    const gd=await this.gamesDir(), ids=[];
+    for await (const [n,h] of gd.entries()){
+      if (h.kind!=='file' || !n.endsWith('.json')) continue;
+      try{ const g=JSON.parse(await (await h.getFile()).text()); if (mergeIn(g)) ids.push(g.id); }catch(e){}
+    }
+    return ids;
+  },
+  queue(id){ clearTimeout(this.timers[id]); this.timers[id]=setTimeout(()=>{ this.chain=this.chain.then(()=>this.writeNow(id)); },300); },
+  async writeNow(id){
+    if (!this.ready()) return; const g=games[id]; if (!g) return;
+    try{
+      const fh=await (await this.gamesDir()).getFileHandle(id+'.json',{create:true}), w=await fh.createWritable();
+      await w.write(JSON.stringify(g,null,1)); await w.close(); this.last=Date.now(); renderFiles();
+    }catch(e){ this.needPerm=true; renderFiles(); toast('השמירה לתיקייה נכשלה. חדשו את ההרשאה לתיקייה.'); }
+  },
+  async sync(){ afterMerge(await this.pull(), 'lf'); Object.keys(games).forEach(id=>this.queue(id)); }
+};
+$('lf-connect').onclick = async () => {
+  try{
+    const picked = await window.showDirectoryPicker({id:'yarin-project', mode:'readwrite'});
+    LF.dir = picked.name==='yarin_data' ? picked : await picked.getDirectoryHandle('yarin_data',{create:true});
+    LF.needPerm=false; await idbSet('dir', LF.dir); await LF.sync(); toast('התיקייה חוברה');
+  }catch(e){ if (e.name!=='AbortError') toast('לא ניתן לחבר את התיקייה'); }
+  renderFiles();
+};
+$('lf-relink').onclick = async () => {
+  try{ if (await LF.dir.requestPermission({mode:'readwrite'})==='granted'){ LF.needPerm=false; await LF.sync(); toast('ההרשאה חודשה'); } }
+  catch(e){ toast('לא ניתן לחדש את ההרשאה'); }
+  renderFiles();
+};
+$('lf-disconnect').onclick = async () => { LF.dir=null; LF.needPerm=false; await idbSet('dir',undefined); renderFiles(); toast('התיקייה נותקה. הקבצים בה לא נמחקו.'); };
+
+/* ----- Google Drive ----- */
+const GFOLDER_MIME='application/vnd.google-apps.folder';
+function parseFolderId(s){ s=String(s||'').trim(); const m=s.match(/folders\/([\w-]{10,})/)||s.match(/[?&]id=([\w-]{10,})/); return m?m[1]:(/^[\w-]{10,}$/.test(s)?s:''); }
+let gisLoading=null;
+function loadGis(){
+  if (window.google && google.accounts && google.accounts.oauth2) return Promise.resolve();
+  if (gisLoading) return gisLoading;
+  gisLoading = new Promise((res,rej)=>{ const sc=document.createElement('script'); sc.src='https://accounts.google.com/gsi/client'; sc.async=true; sc.onload=res; sc.onerror=()=>{ gisLoading=null; rej(new Error('nolib')); }; document.head.appendChild(sc); });
+  return gisLoading;
+}
+const GD = {
+  token:null, exp:0, rootId:null, gamesId:null, folderName:'', canEdit:false, user:null,
+  ids:{}, mod:{}, remoteUpd:{}, timers:{}, chain:Promise.resolve(), busy:0, failed:new Set(), last:0, warned:false,
+  available(){ return /^https?:$/.test(location.protocol) && window.self===window.top; },
+  clientId(){ return lsRaw('ys-gclient') || lsRaw('mm-gclient'); },
+  folderId(){ return lsRaw('ys-gfolder'); },
+  ready(){ return !!this.token && !!this.gamesId && this.canEdit; },
+  signIn(){
+    return new Promise((res,rej)=>{
+      if (!(window.google && google.accounts && google.accounts.oauth2)) return rej(new Error('nolib'));
+      const scope='https://www.googleapis.com/auth/drive';
+      const tc=google.accounts.oauth2.initTokenClient({client_id:this.clientId(), scope,
+        callback:r=>{ if (r.error) return rej(new Error(r.error));
+          if (google.accounts.oauth2.hasGrantedAllScopes && !google.accounts.oauth2.hasGrantedAllScopes(r,scope)) return rej(new Error('scope'));
+          this.token=r.access_token; this.exp=Date.now()+((+r.expires_in||3600)-60)*1000; res(); },
+        error_callback:e=>rej(new Error(e && e.type || 'popup'))});
+      tc.requestAccessToken({prompt:''});
+    });
+  },
+  async api(path, opts={}, raw){
+    if (!this.token || Date.now()>this.exp){ this.expired(); throw new Error('expired'); }
+    const url = path.startsWith('http') ? path : 'https://www.googleapis.com/drive/v3/'+path;
+    const r = await fetch(url,{...opts, headers:{...(opts.headers||{}), Authorization:'Bearer '+this.token}});
+    if (r.status===401){ this.expired(); throw new Error('expired'); }
+    if (!r.ok){
+      let reason='', msg='';
+      try{ const j=await r.json(); reason=(j.error && (j.error.errors&&j.error.errors[0]&&j.error.errors[0].reason || j.error.status))||''; msg=(j.error&&j.error.message)||''; }catch(e){}
+      const err=new Error('http'+r.status); err.status=r.status; err.reason=reason; err.detail=msg; throw err;
+    }
+    return raw ? r : (r.status===204 ? null : r.json());
+  },
+  expired(){ if (!this.token) return; this.token=null; renderFiles(); toast('החיבור ל-Google פג. השינויים נשמרים במכשיר ויעלו לדרייב אחרי התחברות מחדש.'); },
+  q:s=>encodeURIComponent(s),
+  async list(parent){
+    let out=[], pt='';
+    do{ const r=await this.api(`files?q=${this.q(`'${parent}' in parents and trashed=false`)}&fields=nextPageToken,files(id,name,modifiedTime,mimeType)&supportsAllDrives=true&includeItemsFromAllDrives=true&pageSize=1000${pt?'&pageToken='+pt:''}`); out=out.concat(r.files||[]); pt=r.nextPageToken; } while(pt);
+    return out;
+  },
+  async ensureFolder(parent, name){
+    const f=(await this.list(parent)).find(x=>x.name===name && x.mimeType===GFOLDER_MIME); if (f) return f.id;
+    if (!this.canEdit) return null;
+    return (await this.api('files?supportsAllDrives=true&fields=id',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name, mimeType:GFOLDER_MIME, parents:[parent]})})).id;
+  },
+  async open(folderId){
+    const meta=await this.api(`files/${folderId}?fields=id,name,mimeType,capabilities(canAddChildren)&supportsAllDrives=true`);
+    if (meta.mimeType!==GFOLDER_MIME) throw new Error('notfolder');
+    this.rootId=meta.id; this.folderName=meta.name; this.canEdit=!!(meta.capabilities && meta.capabilities.canAddChildren);
+    try{ this.user=(await this.api('about?fields=user(displayName,emailAddress)')).user; }catch(e){ this.user=null; }
+    const dataId = meta.name==='yarin_data' ? meta.id : await this.ensureFolder(meta.id,'yarin_data');
+    this.gamesId = dataId ? await this.ensureFolder(dataId,'games') : null;
+    this.ids={}; this.mod={}; this.remoteUpd={};
+  },
+  async readGame(fileId){ const r=await this.api(`files/${fileId}?alt=media&supportsAllDrives=true`,{},true); return JSON.parse(await r.text()); },
+  async pull(){
+    if (!this.gamesId) return [];
+    const files=await this.list(this.gamesId), ids=[];
+    for (const f of files){
+      const m=f.name.match(/^(.+)\.json$/); if (!m) continue;
+      const id=m[1]; this.ids[id]=f.id;
+      if (this.mod[id] && f.modifiedTime<=this.mod[id]) continue;
+      try{ const g=await this.readGame(f.id); this.mod[id]=f.modifiedTime; this.remoteUpd[id]=g.updatedAt||0; if (mergeIn(g)) ids.push(id); }
+      catch(e){ if (e.message==='expired') throw e; }
+    }
+    return ids;
+  },
+  queue(id){
+    if (!this.canEdit){ if (!this.warned){ this.warned=true; toast('יש לך הרשאת צפייה בלבד בתיקייה בדרייב, ולכן שינויים לא יישמרו שם.'); } return; }
+    if (!this.timers[id]) this.busy++;
+    clearTimeout(this.timers[id]);
+    this.timers[id]=setTimeout(()=>{ delete this.timers[id]; this.chain=this.chain.then(()=>this.writeNow(id)).finally(()=>{ this.busy=Math.max(0,this.busy-1); renderFiles(); }); },800);
+  },
+  async writeNow(id, attempt=0){
+    if (!this.token){ this.failed.add(id); return; }
+    try{
+      // אם מכשיר אחר שמר את המשחק הזה בינתיים, ממזגים לפני הכתיבה
+      if (this.ids[id]){
+        const meta=await this.api(`files/${this.ids[id]}?fields=modifiedTime&supportsAllDrives=true`);
+        if (this.mod[id] && meta.modifiedTime>this.mod[id]){ const remote=await this.readGame(this.ids[id]); this.mod[id]=meta.modifiedTime; this.remoteUpd[id]=remote.updatedAt||0; if (mergeIn(remote)){ afterMerge([id],'gd'); return; } }
+      }
+      const g=games[id]; if (!g) return;
+      const body=JSON.stringify(g,null,1), fid=this.ids[id]; let r;
+      if (fid) r=await this.api(`https://www.googleapis.com/upload/drive/v3/files/${fid}?uploadType=media&supportsAllDrives=true&fields=id,modifiedTime`,{method:'PATCH',headers:{'Content-Type':'application/json'},body});
+      else {
+        const bd='ysb'+Date.now();
+        const mp=`--${bd}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify({name:id+'.json', parents:[this.gamesId], mimeType:'application/json'})}\r\n--${bd}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${body}\r\n--${bd}--`;
+        r=await this.api('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&supportsAllDrives=true&fields=id,modifiedTime',{method:'POST',headers:{'Content-Type':'multipart/related; boundary='+bd},body:mp});
+        this.ids[id]=r.id;
+      }
+      this.mod[id]=r.modifiedTime; this.remoteUpd[id]=g.updatedAt||0; this.failed.delete(id); this.last=Date.now();
+    }catch(e){
+      if (e.message==='expired'){ this.failed.add(id); return; }
+      const rate = !e.status || e.status===429 || e.status>=500 || /rateLimit|userRateLimit|backendError/i.test(e.reason||'');
+      if (e.status===404 && this.ids[id] && attempt<1){ delete this.ids[id]; return this.writeNow(id,attempt+1); }
+      if (rate && attempt<4){ await new Promise(r=>setTimeout(r,(2**attempt)*1000+Math.random()*500)); return this.writeNow(id,attempt+1); }
+      this.failed.add(id); this.reportFail(e);
+    }
+  },
+  reportFail(e){
+    const now=Date.now(); if (this._lastFail && now-this._lastFail<4000) return; this._lastFail=now;
+    const r=e.reason||'', d=e.detail||'';
+    let msg;
+    if (!e.status) msg='אין חיבור ל-Google. השינויים נשמרים במכשיר ויעלו לדרייב בהמשך.';
+    else if (/insufficient/i.test(r+d)) msg='לא אושרה הרשאת עריכה לדרייב. התנתקו, התחברו שוב וסמנו בחלון של Google את תיבת ההרשאה.';
+    else if (/storageQuota/i.test(r)) msg='אין מספיק מקום פנוי ב-Google Drive.';
+    else if (e.status===403) msg=`Google חסמה את השמירה (${r||e.status}). ודאו שיש לחשבון הרשאת עורך לתיקייה.`;
+    else msg=`השמירה ל-Google Drive נכשלה (${[e.status,r].filter(Boolean).join(' ')}).`;
+    toast(msg);
+  },
+  retryFailed(){ const f=[...this.failed]; this.failed=new Set(); f.forEach(id=>this.queue(id)); },
+  async sync(){
+    afterMerge(await this.pull(), 'gd');
+    // מעלים משחקים שחסרים בדרייב או חדשים יותר במכשיר
+    Object.keys(games).forEach(id=>{ if (!this.ids[id] || (games[id].updatedAt||0) > (this.remoteUpd[id]||0)) this.queue(id); });
+    this.retryFailed(); this.last=Date.now(); renderFiles();
+  }
+};
+function driveErr(e){
+  const m=e && e.message || '';
+  if (m==='scope') return 'לא סומנה בחלון של Google ההרשאה לגשת לדרייב. התחברו שוב וסמנו את תיבת ההרשאה.';
+  if (m==='nolib') return 'ספריית ההתחברות של Google לא נטענה. בדקו חיבור לאינטרנט ורעננו את העמוד.';
+  if (m==='popup_closed' || m==='popup_failed_to_open') return 'חלון ההתחברות של Google נסגר או נחסם. אפשרו חלונות קופצים ונסו שוב.';
+  if (m==='access_denied') return 'ההתחברות בוטלה, או שהחשבון לא נוסף כמשתמש בדיקה בהגדרות הפרויקט ב-Google Cloud.';
+  if (m==='notfolder') return 'הקישור לא מוביל לתיקייה בדרייב.';
+  if (m==='http404') return 'התיקייה לא נמצאה, או שאין לחשבון הזה גישה אליה.';
+  if (m==='http403') return 'אין הרשאה. ודאו ש-Google Drive API מופעל בפרויקט ושהתיקייה משותפת עם החשבון.';
+  return 'החיבור ל-Google Drive נכשל ('+m+').';
+}
+function saveDriveFields(){
+  lsRawSet('ys-gclient', $('gd-client').value.trim());
+  lsRawSet('ys-gfolder', parseFolderId($('gd-folder').value));
+}
+$('gd-client').addEventListener('change', ()=>{ saveDriveFields(); if (GD.clientId()) loadGis().catch(()=>{}); });
+$('gd-folder').addEventListener('change', saveDriveFields);
+async function driveConnect(){
+  saveDriveFields();
+  if (!GD.clientId() || !GD.folderId()){ toast('הזינו Client ID וקישור לתיקייה בדרייב'); return; }
+  if (!GD.available()){ toast('החיבור לדרייב עובד רק מהכתובת באינטרנט (GitHub Pages), לא מקובץ שנפתח מהמחשב.'); return; }
+  try{
+    await GD.signIn();
+    $('gd-state').textContent='טוען נתונים מ-Google Drive…';
+    await GD.open(GD.folderId());
+    lsRawSet('ys-gused','1');
+    await GD.sync();
+    toast(`מחובר ל-Google Drive${GD.user?' כ-'+GD.user.emailAddress:''}${GD.canEdit?'':' (צפייה בלבד)'}`);
+  }catch(e){ if (e.message!=='expired') toast(driveErr(e)); }
+  renderFiles();
+}
+$('gd-connect').onclick = driveConnect;
+$('gd-reauth').onclick = async () => {
+  try{ await GD.signIn(); if (!GD.gamesId) await GD.open(GD.folderId()); await GD.sync(); toast('מחובר מחדש'); }
+  catch(e){ toast(driveErr(e)); }
+  renderFiles();
+};
+$('gd-sync').onclick = async () => { try{ await GD.sync(); toast('סונכרן'); }catch(e){ if (e.message!=='expired') toast(driveErr(e)); } };
+$('gd-link').onclick = async () => {
+  const link = location.origin+location.pathname+'#gclient='+encodeURIComponent(GD.clientId())+'&gfolder='+encodeURIComponent(GD.folderId());
+  try{ if (navigator.share){ await navigator.share({url:link, title:'מעקב מהלכים'}); return; } }catch(e){ if (e.name==='AbortError') return; }
+  try{ await navigator.clipboard.writeText(link); toast('הקישור הועתק'); }catch(e){ toast('לא ניתן להעתיק במכשיר זה'); }
+};
+$('gd-disconnect').onclick = async () => {
+  if (GD.busy && GD.token){ toast('שומר את השינויים האחרונים…'); const t0=Date.now(); while (GD.busy && Date.now()-t0<8000) await new Promise(r=>setTimeout(r,250)); }
+  try{ if (GD.token && window.google) google.accounts.oauth2.revoke(GD.token,()=>{}); }catch(e){}
+  GD.token=null; GD.gamesId=null; GD.user=null; GD.ids={}; GD.mod={}; GD.remoteUpd={}; GD.failed=new Set();
+  lsRawSet('ys-gused','');
+  renderFiles(); toast('נותקת מ-Google Drive. הנתונים נשארים במכשיר ובדרייב.');
+};
+
+/* ----- גיבוי ידני לקובץ ----- */
+function backupData(){ return { app:'yarin-stats', version:1, exportedAt:new Date().toISOString(), games }; }
+$('fs-export').onclick = async () => {
+  const json=JSON.stringify(backupData(),null,2), name=`yarin-stats-${today()}.json`;
+  try{
+    const file=new File([json],name,{type:'application/json'});
+    if (navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file], title:'גיבוי מעקב מהלכים'}); lsSet(LS_BACKUP,Date.now()); renderFiles(); toast('הגיבוי נשמר'); return; }
+  }catch(e){ if (e.name==='AbortError') return; }
+  const url=URL.createObjectURL(new Blob([json],{type:'application/json'}));
+  const a=document.createElement('a'); a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),2000);
+  lsSet(LS_BACKUP,Date.now()); renderFiles(); toast('קובץ הגיבוי ירד');
+};
+$('fs-import').onclick = () => { $('fs-input').value=''; $('fs-input').click(); };
+$('fs-input').onchange = async () => {
+  const f=$('fs-input').files[0]; if (!f) return;
+  let list;
+  try{ const d=JSON.parse(await f.text()); list = d && d.app==='yarin-stats' && d.games; if (!list || typeof list!=='object') throw 0; }
+  catch(e){ toast('הקובץ הזה אינו גיבוי של האפליקציה'); return; }
+  const n=Object.values(list).filter(g=>g && !g.deleted).length;
+  askConfirm(`נמצאו בקובץ ${n} משחקים. למזג אותם עם המשחקים שבמכשיר?`, 'מיזוג', () => {
+    const ids=Object.values(list).filter(g=>mergeIn(g)).map(g=>g.id);
+    afterMerge(ids, 'file'); toast(ids.length ? `עודכנו ${ids.length} משחקים` : 'כל המשחקים בקובץ כבר קיימים');
+  });
+};
+
+/* ----- תצוגת מצב ----- */
+function renderFiles(){
+  const n=liveCount(), last=lsGet(LS_BACKUP);
+  const where=[GD.ready()?'Google Drive':null, LF.ready()?'תיקייה במחשב':null].filter(Boolean);
+  $('fs-status').textContent = `${n} משחקים שמורים במכשיר` + (where.length ? `. סנכרון פעיל: ${where.join(', ')}.` : '.');
+
+  const connected = !!GD.token && !!GD.gamesId, wasUsed = !!lsRaw('ys-gused');
+  if (document.activeElement!==$('gd-client')) $('gd-client').value = GD.clientId();
+  if (document.activeElement!==$('gd-folder')) $('gd-folder').value = GD.folderId() ? 'https://drive.google.com/drive/folders/'+GD.folderId() : '';
+  $('gd-setup').hidden = connected || (wasUsed && !!GD.clientId() && !!GD.folderId());
+  $('gd-connect').hidden = connected || wasUsed;
+  $('gd-reauth').hidden = connected || !wasUsed;
+  $('gd-sync').hidden = !connected;
+  $('gd-link').hidden = !(GD.clientId() && GD.folderId());
+  $('gd-disconnect').hidden = !(connected || wasUsed);
+  let gs;
+  if (connected){
+    gs = `מחובר${GD.user?' כ-'+GD.user.emailAddress:''} לתיקייה „${GD.folderName}”.`;
+    gs += GD.canEdit ? (GD.busy ? ' שומר…' : GD.last ? ` סנכרון אחרון ${fmtStamp(GD.last)}.` : '') : ' צפייה בלבד.';
+    if (GD.failed.size) gs += ` ${GD.failed.size} משחקים ממתינים להעלאה.`;
+  } else if (wasUsed) gs = 'החיבור ל-Google פג או שהעמוד נטען מחדש. התחברו כדי להמשיך לסנכרן.';
+  else gs = 'שמירה בתיקייה שלכם בדרייב וסנכרון בין כל המכשירים.';
+  $('gd-state').textContent = gs;
+
+  $('lf-panel').hidden = !LF_API;
+  if (LF_API){
+    $('lf-connect').hidden = !!LF.dir;
+    $('lf-relink').hidden = !(LF.dir && LF.needPerm);
+    $('lf-disconnect').hidden = !LF.dir;
+    $('lf-state').textContent = !LF.dir ? 'שמירה אוטומטית של כל משחק כקובץ בתיקייה במחשב. אפשר לבחור תיקייה שמסונכרנת עם Google Drive במחשב.'
+      : LF.needPerm ? 'הדפדפן מבקש לאשר מחדש את הגישה לתיקייה.'
+      : `מחובר לתיקייה yarin_data.${LF.last?` נשמר לאחרונה ${fmtStamp(LF.last)}.`:''}`;
+  }
+  $('bk-state').textContent = (last ? `גיבוי אחרון: ${fmtStamp(last)}. ` : '') + 'באייפון ייפתח תפריט השיתוף, שבו אפשר לבחור "שמירה בקבצים" או Google Drive.';
+}
+$('gd-help').innerHTML = `<summary>איך מגדירים את Google Drive (פעם אחת)</summary>
+  <ol>
+    <li>אם כבר הגדרתם Client ID לאפליקציית תזרים, אפשר להשתמש באותו אחד: שתי האפליקציות נמצאות בכתובת <code dir="ltr">${esc(location.origin)}</code>, ולכן הוא ממולא כאן אוטומטית אם הוזן שם בדפדפן הזה.</li>
+    <li>אחרת: ב-<a href="https://console.cloud.google.com/" target="_blank" rel="noopener">Google Cloud Console</a> צרו פרויקט והפעילו את <strong>Google Drive API</strong>. ב-OAuth consent screen בחרו External, השאירו במצב Testing והוסיפו את החשבונות תחת Test users. ב-Credentials צרו OAuth client ID מסוג Web application, והוסיפו תחת Authorized JavaScript origins את <code dir="ltr">${esc(location.origin)}</code>.</li>
+    <li>בדרייב צרו תיקייה (למשל „מעקב ירין”) והדביקו כאן את הקישור אליה. האפליקציה תיצור בתוכה את התיקייה <code>yarin_data</code>, ובה קובץ לכל משחק.</li>
+    <li>כדי שמכשיר נוסף יסתנכרן, שלחו אליו את „קישור ההגדרה” ושתפו איתו את התיקייה בדרייב (עורך כדי לתעד, צופה כדי רק לראות).</li>
+  </ol>`;
+
+/* כל שמירה או מחיקה של משחק נשלחת גם לתיקייה ולדרייב */
+const _save = save;
+save = function(){ _save(); notifySinks(game.id); };
+const _removeGame = removeGame;
+removeGame = function(id){ _removeGame(id); notifySinks(id); };
+
+/* בדיקת שינויים ממכשירים אחרים */
+let checking=false;
+setInterval(async () => {
+  if (document.visibilityState!=='visible' || checking || !$('modal').hidden) return;
+  checking=true;
+  try{
+    if (GD.ready() && !GD.busy) afterMerge(await GD.pull(), 'gd');
+    if (LF.ready()) afterMerge(await LF.pull(), 'lf');
+  }catch(e){}
+  checking=false;
+}, 25000);
+
+/* פתיחה: קישור הגדרה, תיקייה שמורה, ספריית Google */
+(async () => {
+  try{
+    const hp=new URLSearchParams(location.hash.slice(1));
+    if (hp.get('gclient')) lsRawSet('ys-gclient', hp.get('gclient'));
+    if (hp.get('gfolder')) lsRawSet('ys-gfolder', parseFolderId(hp.get('gfolder')));
+    if (hp.get('gclient') || hp.get('gfolder')){ history.replaceState(null,'',location.pathname+location.search); toast('הגדרות הדרייב נקלטו. לחצו על התחברות ל-Google Drive.'); }
+  }catch(e){}
+  if (GD.clientId() && GD.available()) loadGis().catch(()=>{});
+  if (LF_API){
+    const h=await idbGet('dir');
+    if (h){ LF.dir=h; try{ LF.needPerm=(await h.queryPermission({mode:'readwrite'}))!=='granted'; }catch(e){ LF.needPerm=true; } if (!LF.needPerm) LF.sync(); }
+  }
+  renderFiles();
+})();
+
+buildGrid();
+renderSetupLists();
+renderHome();
+renderFiles();
+</script>
+</body>
+</html>
